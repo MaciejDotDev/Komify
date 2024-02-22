@@ -1,8 +1,9 @@
 
 
+<h2> Komi Image </h2>
 
 <p align="center">
-  <img src="" alt="Komi Image" width = "800" height="500" style="align-items=center; justify-content=center;" />
+  <img src="https://github.com/MaciejDotDev/Komify/blob/main/assets/images/2.png?raw=true" alt="Komi Image" width = "800" height="500" style="align-items=center; justify-content=center;" />
   </p>
 
 Programmed by [Liam](https://www.youtube.com/@puffbee21) 
