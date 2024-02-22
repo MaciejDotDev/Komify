@@ -1,0 +1,148 @@
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+@keyframes spinAndBounce {
+    0% {
+        transform: scale(1) rotate(0deg) translate(0%);
+    }
+    50% {
+        transform: scale(1.2) rotate(360deg);
+    }
+    100% {
+        transform: scale(1) rotate(720deg) translate(100%);
+    }
+}
+@keyframes walkOffScreen {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(150%);
+    }
+}
+
+@keyframes pulsate {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes explode {
+
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.2);
+    }
+
+    50% {
+        transform: scale(1.4);
+    }
+
+    75% {
+        transform: scale(1.6);
+    }
+
+    100% {
+        transform: scale(1.8);
+        transform : rotate(360deg);
+    }
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    50% {
+        transform: translateX(5px);
+    }
+    75% {
+        transform: translateX(-5px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes disappearAndReappear {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    75% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes sniff {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(10deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes goleftappearright {
+    0% {
+        transform: translateX(0%);
+    }
+
+    50% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(0%);
+    }
+    
+}
+
+@keyframes gorightappearleft {
+    0% {
+        transform : translate(100%);
+    }
+
+    25% {
+        transform : translate(0%);
+    }
+
+    50% {
+        transform : translate(-100%);
+    }
+
+    100%{
+        transform : translate(0%);
+    }
+
+}
+
