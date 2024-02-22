@@ -1,9 +1,8 @@
-# Jambofy Chrome Extension
 
 
 
 <p align="center">
-  <img src="../critterify-Jambofy/assets/images/2.png" alt="Jambofy Image" width = "800" height="500" style="align-items=center; justify-content=center;" />
+  <img src="" alt="Komi Image" width = "800" height="500" style="align-items=center; justify-content=center;" />
   </p>
 
 Programmed by [Liam](https://www.youtube.com/@puffbee21) 
