@@ -1,0 +1,44 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Poppins', sans-serif;
+    background-color: #4c4a76;
+    border: #595289;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 180px;
+    width: 200px;
+
+}
+
+/* the popup class */
+.popup{
+
+}
+
+/* the popup content */
+
+.popup-content{
+
+}
+
+/* the popup image */
+
+.popup-img{
+    transform: translateY(10px);
+    transition: 0.3s;
+    overflow: hidden;
+    position: absolute;
+    bottom: -40%; 
+
+}
+
+/* img hover effect */
+.popup-img:hover{
+    transform: translate(0, -30px);
+    transition: 0.3s;
+}
