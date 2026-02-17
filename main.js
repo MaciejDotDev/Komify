@@ -1,6 +1,6 @@
 (() => {
   const imageFilePath = "assets/images/";
-  const numImages = 35;
+  const numImages = 34;
   const flipRandomPercent = 2;
   const isEnabled = true;
 
