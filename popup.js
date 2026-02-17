@@ -1,13 +1,17 @@
-document.addEventListener('DOMContentLoaded', function()
-{
-    var checkPageButton = document.getElementById('DisableButton');
-    checkPageButton.addEventListener('click', function()
-    {
-        chrome.tabs.getSelected(null, function(tab)
-        {
-            alert("Test");
-            var enabledBool = document.getElementById("isEnabled");
-            enabledBool = !enabledBool;
-        });
-    }, false);
-}, false);
+document.addEventListener("DOMContentLoaded", async () => {
+  const btn = document.getElementById("DisableButton");
+
+  const { komifyEnabled } = await chrome.storage.sync.get({ komifyEnabled: true });
+  btn.textContent = komifyEnabled ? "Disable" : "Enable";
+
+  btn.addEventListener("click", async () => {
+    const current = (await chrome.storage.sync.get({ komifyEnabled: true })).komifyEnabled;
+    const next = !current;
+
+    await chrome.storage.sync.set({ komifyEnabled: next });
+    btn.textContent = next ? "Disable" : "Enable";
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) chrome.tabs.sendMessage(tab.id, { type: "KOMIFY_TOGGLE" });
+  });
+});
