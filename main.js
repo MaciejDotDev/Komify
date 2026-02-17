@@ -5,6 +5,7 @@
   const isEnabled = true;
 
   const SELECTOR = "ytd-thumbnail img, .ytp-videowall-still-image";
+  const MARKER_CLASS = "komify-applied";
 
   function getImageURL(index) {
     return chrome.runtime.getURL(`${imageFilePath}${index}.png`);
@@ -15,56 +16,85 @@
   }
 
   function getRandomImage() {
-    return getRandomInt(numImages + 1);
+    return getRandomInt(numImages); 
   }
 
   function getImageState() {
     return getRandomInt(flipRandomPercent) === 1;
   }
 
-  function applyThumbnails(el, imageUrl, flip = false) {
-    if (el.dataset.komifyApplied === "1") return;
-    el.dataset.komifyApplied = "1";
+  function applyToImg(img) {
+    const parent = img.parentElement;
+    if (!parent) return;
 
-    if (el.nodeName === "IMG") {
-      const parent = el.parentElement;
-      if (!parent) return;
+    if (parent.classList.contains(MARKER_CLASS)) return;
+    parent.classList.add(MARKER_CLASS);
 
-      const parentStyle = getComputedStyle(parent);
-      if (parentStyle.position === "static") parent.style.position = "relative";
+    const overlay = document.createElement("img");
+    overlay.src = getImageURL(getRandomImage());
+    overlay.alt = "";
+    overlay.decoding = "async";
+    overlay.loading = "eager";
 
-      const overlay = document.createElement("img");
-      overlay.src = imageUrl;
-      overlay.style.position = "absolute";
-      overlay.style.top = "0";
-      overlay.style.left = "0";
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.objectFit = "cover";
-      overlay.style.zIndex = "2";
-      overlay.style.pointerEvents = "none";
+    const parentStyle = getComputedStyle(parent);
+    if (parentStyle.position === "static") parent.style.position = "relative";
 
-      if (flip) overlay.style.transform = "scaleX(-1)";
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.objectFit = "cover";
+    overlay.style.zIndex = "9999";
+    overlay.style.pointerEvents = "none";
 
-      parent.appendChild(overlay);
-    } else if (el.nodeName === "DIV") {
-      el.style.backgroundImage = `url("${imageUrl}"), ${el.style.backgroundImage || "none"}`;
-      el.style.backgroundSize = "cover";
-    }
+    if (getImageState()) overlay.style.transform = "scaleX(-1)";
+
+    overlay.addEventListener("error", () => {
+      parent.classList.remove(MARKER_CLASS);
+      overlay.remove();
+    });
+
+    parent.appendChild(overlay);
+  }
+
+  function applyToVideowall(div) {
+    if (div.classList.contains(MARKER_CLASS)) return;
+    div.classList.add(MARKER_CLASS);
+
+    const url = getImageURL(getRandomImage());
+    div.style.backgroundImage = `url("${url}"), ${div.style.backgroundImage || "none"}`;
+    div.style.backgroundSize = "cover";
   }
 
   function processAll() {
     document.querySelectorAll(SELECTOR).forEach((el) => {
-      const url = getImageURL(getRandomImage());
-      const flip = getImageState();
-      applyThumbnails(el, url, flip);
+      if (el.nodeName === "IMG") applyToImg(el);
+      else if (el.nodeName === "DIV") applyToVideowall(el);
     });
+  }
+
+  let scheduled = false;
+  function scheduleProcess() {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => {
+      scheduled = false;
+      processAll();
+    }, 250);
   }
 
   if (isEnabled) {
     processAll();
 
-    const obs = new MutationObserver(() => processAll());
-    obs.observe(document.documentElement, { childList: true, subtree: true });
+    const obs = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+        if (m.addedNodes && m.addedNodes.length) {
+          scheduleProcess();
+          break;
+        }
+      }
+    });
+
+    obs.observe(document.body, { childList: true, subtree: true });
   }
 })();
