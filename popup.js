@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   btn.textContent = komifyEnabled ? "Disable" : "Enable";
 
   btn.addEventListener("click", async () => {
-    const current = (await chrome.storage.sync.get({ komifyEnabled: true })).komifyEnabled;
+    const { komifyEnabled: current } = await chrome.storage.sync.get({ komifyEnabled: true });
     const next = !current;
 
     await chrome.storage.sync.set({ komifyEnabled: next });
