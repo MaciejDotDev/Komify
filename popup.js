@@ -1,3 +1,5 @@
+console.log("POPUP JS LOADED v0.2.9", chrome?.runtime?.id);
+
 document.addEventListener("DOMContentLoaded", async () => {
   const btn = document.getElementById("DisableButton");
 
