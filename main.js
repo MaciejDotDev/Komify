@@ -1,167 +1,119 @@
 (() => {
+  const imageFilePath = "assets/images/";
+  const numImages = 35; // 0..34
+  const flipRandomPercent = 2;
 
-    const imageFilePath = "assets/images/";
-    const numImages = 35; 
-    const flipRandomPercent = 2;
+  const OVERLAY_CLASS = "komify-overlay";
+  const CONTAINER_CLASS = "komify-container";
 
-    const IMG_SELECTOR = "ytd-thumbnail img, img.yt-core-image";
-    const DIV_SELECTOR = ".ytp-videowall-still-image";
+  function getImageURL(index) {
+    return chrome.runtime.getURL(`${imageFilePath}${index}.png`);
+  }
 
-    let pageObserver = null;
-    const imgObservers = new WeakMap();
-    const handledImages = new WeakSet();
+  function randInt(max) {
+    return Math.floor(Math.random() * max);
+  }
 
-    function getImageURL(index) {
-        return chrome.runtime.getURL(`${imageFilePath}${index}.png`);
-    }
+  function pickIndex() {
+    return randInt(numImages); // 0..34
+  }
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
+  function shouldFlip() {
+    return randInt(flipRandomPercent) === 1;
+  }
 
-    function pickIndex() {
-        return getRandomInt(numImages);
-    }
+  function isVideoThumbnailImg(img) {
+    const src = img.currentSrc || img.src || "";
+    return typeof src === "string" && src.includes("i.ytimg.com/vi/");
+  }
 
-    function shouldFlip() {
-        return getRandomInt(flipRandomPercent) === 1;
-    }
+  function findOverlayHost(img) {
+    return (
+      img.closest("a#thumbnail") ||
+      img.closest("ytd-thumbnail") ||
+      img.parentElement
+    );
+  }
 
-    function setKomi(img) {
-        const url = getImageURL(pickIndex());
+  function ensureContainerStyles(host) {
+    if (!host) return;
 
-        img.dataset.komiUrl = url;
+    const cs = getComputedStyle(host);
+    if (cs.position === "static") host.style.position = "relative";
 
-        img.removeAttribute("srcset");
-        img.removeAttribute("sizes");
+    host.style.zIndex = host.style.zIndex || "0";
+  }
 
-        img.src = url;
+  function addOverlay(host) {
+    if (!host) return;
 
-        if (shouldFlip()) {
-            img.style.transform = "scaleX(-1)";
-        }
-    }
+    if (host.classList.contains(CONTAINER_CLASS) && host.querySelector(`.${OVERLAY_CLASS}`)) return;
 
-    function makeSticky(img) {
-        if (imgObservers.has(img)) return;
+    host.classList.add(CONTAINER_CLASS);
 
-        const observer = new MutationObserver((mutations) => {
-            const desired = img.dataset.komiUrl;
-            if (!desired) return;
+    const overlay = document.createElement("img");
+    overlay.className = OVERLAY_CLASS;
+    overlay.alt = "";
+    overlay.decoding = "async";
+    overlay.loading = "eager";
+    overlay.src = getImageURL(pickIndex());
 
-            const changed = mutations.some(m =>
-                m.type === "attributes" &&
-                (m.attributeName === "src" ||
-                    m.attributeName === "srcset" ||
-                    m.attributeName === "sizes")
-            );
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.objectFit = "contain";
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "999999"; 
+    overlay.style.opacity = "0.7";
 
-            if (!changed) return;
+    if (shouldFlip()) overlay.style.transform = "scaleX(-1)";
 
-            if (img.src !== desired) {
-                img.removeAttribute("srcset");
-                img.removeAttribute("sizes");
-                img.src = desired;
-            }
-        });
+    overlay.addEventListener(
+      "error",
+      () => {
+        overlay.remove();
+      },
+      { once: true }
+    );
 
-        observer.observe(img, {
-            attributes: true,
-            attributeFilter: ["src", "srcset", "sizes"]
-        });
+    ensureContainerStyles(host);
+    host.appendChild(overlay);
+  }
 
-        imgObservers.set(img, observer);
-    }
+  function process() {
+    document.querySelectorAll("img").forEach((img) => {
+      if (!isVideoThumbnailImg(img)) return;
 
-    function komifyImage(img) {
-        if (!img || img.nodeName !== "IMG") return;
-        if (handledImages.has(img)) return;
+      const host = findOverlayHost(img);
+      if (!host) return;
 
-        handledImages.add(img);
-
-        setKomi(img);
-        makeSticky(img);
-    }
-
-    function komifyDiv(div) {
-        if (!div || div.nodeName !== "DIV") return;
-        if (div.dataset.komifyDone === "1") return;
-
-        div.dataset.komifyDone = "1";
-
-        const url = getImageURL(pickIndex());
-        div.style.backgroundImage = `url("${url}")`;
-        div.style.backgroundSize = "cover";
-        div.style.backgroundPosition = "center";
-    }
-
-    function process() {
-        document.querySelectorAll(IMG_SELECTOR).forEach(komifyImage);
-        document.querySelectorAll(DIV_SELECTOR).forEach(komifyDiv);
-    }
-
-    let scheduled = false;
-    function scheduleProcess() {
-        if (scheduled) return;
-        scheduled = true;
-
-        setTimeout(() => {
-            scheduled = false;
-            process();
-        }, 300);
-    }
-
-    function start() {
-        if (pageObserver) return;
-
-        console.log("Komify running");
-
-        process();
-
-        pageObserver = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                if (m.addedNodes && m.addedNodes.length) {
-                    scheduleProcess();
-                    break;
-                }
-            }
-        });
-
-        pageObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    }
-
-    function stop() {
-        console.log("Komify stopped");
-
-        if (pageObserver) {
-            pageObserver.disconnect();
-            pageObserver = null;
-        }
-
-        imgObservers.forEach((observer) => observer.disconnect());
-        imgObservers.clear();
-        handledImages.clear();
-    }
-
-    async function checkAndStart() {
-        const { komifyEnabled } = await chrome.storage.sync.get({ komifyEnabled: true });
-
-        if (komifyEnabled) {
-            start();
-        } else {
-            stop();
-        }
-    }
-
-    chrome.runtime.onMessage.addListener((msg) => {
-        if (msg?.type === "KOMIFY_TOGGLE") {
-            checkAndStart();
-        }
+      addOverlay(host);
     });
+  }
 
-    checkAndStart();
+  let scheduled = false;
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => {
+      scheduled = false;
+      process();
+    }, 250);
+  }
 
+  console.log("[Komify] injected overlay mode. Example:", getImageURL(0));
+
+  process();
+
+  const pageObs = new MutationObserver((muts) => {
+    for (const m of muts) {
+      if (m.addedNodes && m.addedNodes.length) {
+        schedule();
+        break;
+      }
+    }
+  });
+
+  pageObs.observe(document.body, { childList: true, subtree: true });
 })();
